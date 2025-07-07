@@ -7,7 +7,10 @@ import { Calendar, Clock, ArrowLeft, Star, MapPin, Mail, Phone } from "lucide-re
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import ServiceSelection from "@/components/ServiceSelection";
+import EventSelection from "@/components/EventSelection";
+import EventBookingModal from "@/components/EventBookingModal";
 import { Service } from "@/types/Event";
+import { Event } from "@/types/Event";
 
 const Booking = () => {
   const { providerId } = useParams();
@@ -15,6 +18,9 @@ const Booking = () => {
   const [selectedDate, setSelectedDate] = useState("");
   const [selectedTime, setSelectedTime] = useState("");
   const [selectedService, setSelectedService] = useState<Service | null>(null);
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [isEventModalOpen, setIsEventModalOpen] = useState(false);
+  const [bookingType, setBookingType] = useState<"service" | "event">("service");
 
   // Mock data pour le prestataire
   const provider = {
@@ -55,20 +61,78 @@ const Booking = () => {
     ]
   };
 
+  // Mock events data
+  const mockEvents: Event[] = [
+    {
+      id: "1",
+      titre: "Formation React Avancée",
+      date: "2024-02-15",
+      debut: "09:00",
+      fin: "17:00",
+      status: "planifie",
+      nbr_place: 20,
+      places_restantes: 12,
+      description: "Formation complète sur React avec hooks, context et patterns avancés",
+      prix: 150,
+      prestataire_id: "1"
+    },
+    {
+      id: "2",
+      titre: "Atelier UX/UI Design",
+      date: "2024-02-20",
+      debut: "14:00",
+      fin: "18:00",
+      status: "planifie",
+      nbr_place: 15,
+      places_restantes: 8,
+      description: "Apprenez les bases du design d'interface utilisateur",
+      prix: 80,
+      prestataire_id: "1"
+    },
+    {
+      id: "3",
+      titre: "Webinaire Gratuit - Tendances 2024",
+      date: "2024-02-10",
+      debut: "19:00",
+      fin: "20:30",
+      status: "planifie",
+      nbr_place: 100,
+      places_restantes: 45,
+      description: "Découvrez les tendances technologiques de 2024",
+      prix: 0,
+      prestataire_id: "1"
+    }
+  ];
+
   const availableSlots = [
     { date: "2024-01-20", times: ["09:00", "10:30", "14:00", "15:30"] },
     { date: "2024-01-21", times: ["09:30", "11:00", "16:00"] },
     { date: "2024-01-22", times: ["10:00", "14:30", "16:30"] }
   ];
 
+  const handleEventSelect = (event: Event) => {
+    setSelectedEvent(event);
+    setIsEventModalOpen(true);
+  };
+
+  const handleEventBookingConfirm = (bookingData: any) => {
+    // Ici on simulerait la réservation d'événement
+    alert(`Réservation confirmée pour "${bookingData.eventTitle}" - ${bookingData.numberOfPlaces} place(s)`);
+    setIsEventModalOpen(false);
+    setSelectedEvent(null);
+    navigate("/dashboard-user");
+  };
+
   const handleBooking = () => {
-    if (!selectedDate || !selectedTime || !selectedService) {
+    if (bookingType === "service" && (!selectedDate || !selectedTime || !selectedService)) {
       alert("Veuillez sélectionner un service, une date et une heure");
       return;
     }
     
     // Ici on simulerait la réservation
-    alert(`Rendez-vous réservé pour ${selectedService.name} le ${selectedDate} à ${selectedTime}`);
+    if (bookingType === "service") {
+      alert(`Rendez-vous réservé pour ${selectedService?.name} le ${selectedDate} à ${selectedTime}`);
+    }
     navigate("/dashboard-user");
   };
 
@@ -149,28 +213,74 @@ const Booking = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Services & Booking */}
           <div className="lg:col-span-2">
+            {/* Booking Type Selection */}
+            <Card className="p-6 bg-background border border-border mb-6">
+              <h3 className="text-lg font-semibold text-foreground mb-4">Type de réservation</h3>
+              <div className="flex rounded-lg bg-muted p-1">
+                <button
+                  type="button"
+                  onClick={() => setBookingType("service")}
+                  className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all ${
+                    bookingType === "service"
+                      ? "bg-background text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  Consultation individuelle
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setBookingType("event")}
+                  className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all ${
+                    bookingType === "event"
+                      ? "bg-background text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  Événement groupé
+                </button>
+              </div>
+            </Card>
+
             <Tabs defaultValue="services" className="space-y-6">
               <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="services">Services</TabsTrigger>
+                <TabsTrigger value="services">
+                  {bookingType === "service" ? "Services" : "Événements"}
+                </TabsTrigger>
                 <TabsTrigger value="selection">Sélection</TabsTrigger>
-                <TabsTrigger value="booking">Réservation</TabsTrigger>
+                <TabsTrigger value="booking" disabled={bookingType === "event"}>
+                  Réservation
+                </TabsTrigger>
               </TabsList>
 
               <TabsContent value="services">
                 <Card className="p-6 bg-background border border-border">
-                  <h3 className="text-xl font-semibold text-foreground mb-6">Services proposés</h3>
-                  <ServiceSelection 
-                    services={provider.services}
-                    selectedService={selectedService}
-                    onServiceSelect={setSelectedService}
-                  />
+                  <h3 className="text-xl font-semibold text-foreground mb-6">
+                    {bookingType === "service" ? "Services proposés" : "Événements disponibles"}
+                  </h3>
+                  
+                  {bookingType === "service" ? (
+                    <ServiceSelection 
+                      services={provider.services}
+                      selectedService={selectedService}
+                      onServiceSelect={setSelectedService}
+                    />
+                  ) : (
+                    <EventSelection 
+                      events={mockEvents}
+                      onEventSelect={handleEventSelect}
+                    />
+                  )}
                 </Card>
               </TabsContent>
 
               <TabsContent value="selection">
                 <Card className="p-6 bg-background border border-border">
-                  <h3 className="text-xl font-semibold text-foreground mb-6">Service sélectionné</h3>
-                  {selectedService ? (
+                  <h3 className="text-xl font-semibold text-foreground mb-6">
+                    {bookingType === "service" ? "Service sélectionné" : "Événement sélectionné"}
+                  </h3>
+                  
+                  {bookingType === "service" && selectedService ? (
                     <div className="p-4 bg-primary/5 border border-primary/20 rounded-lg">
                       <h4 className="font-medium text-foreground mb-2">{selectedService.name}</h4>
                       <p className="text-sm text-muted-foreground mb-3">{selectedService.description}</p>
@@ -184,15 +294,19 @@ const Booking = () => {
                         </div>
                       </div>
                     </div>
-                  ) : (
+                  ) : bookingType === "service" ? (
                     <p className="text-muted-foreground text-center py-8">
                       Veuillez d'abord sélectionner un service dans l'onglet "Services"
+                    </p>
+                  ) : (
+                    <p className="text-muted-foreground text-center py-8">
+                      Pour les événements, la réservation se fait directement depuis la liste des événements
                     </p>
                   )}
                 </Card>
               </TabsContent>
 
-              <TabsContent value="booking">
+              <TabsContent value="booking" className={bookingType === "event" ? "hidden" : ""}>
                 <Card className="p-6 bg-background border border-border">
                   <h3 className="text-xl font-semibold text-foreground mb-6">Choisir un créneau</h3>
                   
@@ -278,6 +392,15 @@ const Booking = () => {
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Service</span>
                   <span className="font-medium">
+                    {bookingType === "service" ? "Consultation" : "Événement"}
+                  </span>
+                </div>
+                
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">
+                    {bookingType === "service" ? "Service" : "Événement"}
+                  </span>
+                  <span className="font-medium">
                     {selectedService?.name || "Aucun service sélectionné"}
                   </span>
                 </div>
@@ -286,7 +409,7 @@ const Booking = () => {
                   <div className="flex justify-between text-lg font-bold">
                     <span>Total</span>
                     <span className="text-primary">
-                      {selectedService?.price || 0}€
+                      {bookingType === "service" ? (selectedService?.price || 0) : 0}€
                     </span>
                   </div>
                 </div>
@@ -294,10 +417,17 @@ const Booking = () => {
 
               <Button 
                 onClick={handleBooking}
-                disabled={!selectedDate || !selectedTime || !selectedService}
+                disabled={
+                  bookingType === "service" 
+                    ? (!selectedDate || !selectedTime || !selectedService)
+                    : true
+                }
                 className="w-full bg-gradient-primary text-white hover:opacity-90 h-11"
               >
-                Confirmer la réservation
+                {bookingType === "service" 
+                  ? "Confirmer la réservation" 
+                  : "Sélectionnez un événement"
+                }
               </Button>
               
               <p className="text-xs text-muted-foreground text-center mt-4">
@@ -307,6 +437,17 @@ const Booking = () => {
           </div>
         </div>
       </div>
+
+      {/* Event Booking Modal */}
+      <EventBookingModal
+        event={selectedEvent}
+        isOpen={isEventModalOpen}
+        onClose={() => {
+          setIsEventModalOpen(false);
+          setSelectedEvent(null);
+        }}
+        onConfirm={handleEventBookingConfirm}
+      />
     </div>
   );
 };
