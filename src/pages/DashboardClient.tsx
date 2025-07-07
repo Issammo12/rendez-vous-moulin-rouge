@@ -7,6 +7,10 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import WeeklyCalendar from "@/components/WeeklyCalendar";
 import AvailabilityDisplay from "@/components/AvailabilityDisplay";
+import EventCreation from "@/components/EventCreation";
+import EventsList from "@/components/EventsList";
+import ServiceManagement from "@/components/ServiceManagement";
+import { Event, Service } from "@/types/Event";
 
 interface User {
   email: string;
@@ -28,6 +32,8 @@ interface TimeSlot {
 const DashboardClient = () => {
   const [user, setUser] = useState<User | null>(null);
   const [availableSlots, setAvailableSlots] = useState<TimeSlot[]>([]);
+  const [events, setEvents] = useState<Event[]>([]);
+  const [services, setServices] = useState<Service[]>([]);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -49,6 +55,18 @@ const DashboardClient = () => {
     const savedSlots = localStorage.getItem(`availability_${parsedUser.id}`);
     if (savedSlots) {
       setAvailableSlots(JSON.parse(savedSlots));
+    }
+
+    // Charger les événements sauvegardés
+    const savedEvents = localStorage.getItem(`events_${parsedUser.id}`);
+    if (savedEvents) {
+      setEvents(JSON.parse(savedEvents));
+    }
+
+    // Charger les services sauvegardés
+    const savedServices = localStorage.getItem(`services_${parsedUser.id}`);
+    if (savedServices) {
+      setServices(JSON.parse(savedServices));
     }
   }, [navigate]);
 
@@ -78,6 +96,53 @@ const DashboardClient = () => {
     // Sauvegarder dans localStorage
     if (user) {
       localStorage.setItem(`availability_${user.id}`, JSON.stringify(updatedSlots));
+    }
+  };
+
+  const handleEventCreate = (newEvent: Event) => {
+    const updatedEvents = [...events, newEvent];
+    setEvents(updatedEvents);
+    
+    if (user) {
+      localStorage.setItem(`events_${user.id}`, JSON.stringify(updatedEvents));
+    }
+  };
+
+  const handleEventDelete = (eventId: string) => {
+    const updatedEvents = events.filter(event => event.id !== eventId);
+    setEvents(updatedEvents);
+    
+    if (user) {
+      localStorage.setItem(`events_${user.id}`, JSON.stringify(updatedEvents));
+    }
+  };
+
+  const handleServiceCreate = (newService: Service) => {
+    const updatedServices = [...services, newService];
+    setServices(updatedServices);
+    
+    if (user) {
+      localStorage.setItem(`services_${user.id}`, JSON.stringify(updatedServices));
+    }
+  };
+
+  const handleServiceUpdate = (updatedService: Service) => {
+    const updatedServices = services.map(service => 
+      service.id === updatedService.id ? updatedService : service
+    );
+    setServices(updatedServices);
+    
+    if (user) {
+      localStorage.setItem(`services_${user.id}`, JSON.stringify(updatedServices));
+    }
+  };
+
+  const handleServiceDelete = (serviceId: string) => {
+    const updatedServices = services.filter(service => service.id !== serviceId);
+    setServices(updatedServices);
+    
+    if (user) {
+      localStorage.setItem(`services_${user.id}`, JSON.stringify(updatedServices));
     }
   };
 
@@ -194,10 +259,12 @@ const DashboardClient = () => {
 
         {/* Main Content */}
         <Tabs defaultValue="appointments" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="appointments">Rendez-vous</TabsTrigger>
             <TabsTrigger value="calendar">Calendrier</TabsTrigger>
+            <TabsTrigger value="events">Événements</TabsTrigger>
             <TabsTrigger value="services">Services</TabsTrigger>
+            <TabsTrigger value="analytics">Statistiques</TabsTrigger>
             <TabsTrigger value="settings">Paramètres</TabsTrigger>
           </TabsList>
 
@@ -255,17 +322,39 @@ const DashboardClient = () => {
             </div>
           </TabsContent>
 
-          <TabsContent value="services">
+          <TabsContent value="events" className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-bold text-foreground">Mes événements</h2>
+            </div>
+            
+            <div className="space-y-6">
+              <EventCreation onEventCreate={handleEventCreate} />
+              <EventsList events={events} onDeleteEvent={handleEventDelete} />
+            </div>
+          </TabsContent>
+
+          <TabsContent value="services" className="space-y-6">
+            <ServiceManagement 
+              services={services}
+              onServiceCreate={handleServiceCreate}
+              onServiceUpdate={handleServiceUpdate}
+              onServiceDelete={handleServiceDelete}
+            />
+          </TabsContent>
+
+          <TabsContent value="analytics">
             <Card className="p-8 text-center bg-gradient-card border-0 shadow-soft">
-              <Settings className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+              <div className="w-16 h-16 bg-primary/10 rounded-lg flex items-center justify-center mx-auto mb-4">
+                <span className="text-primary font-bold text-xl">📊</span>
+              </div>
               <h3 className="text-xl font-semibold text-foreground mb-2">
-                Gestion des services
+                Statistiques et analyses
               </h3>
               <p className="text-muted-foreground mb-6">
-                Créez et gérez vos différents types de consultations et tarifs
+                Suivez vos performances et analysez votre activité
               </p>
               <Button className="bg-gradient-primary text-white hover:opacity-90">
-                Gérer mes services
+                Voir les statistiques
               </Button>
             </Card>
           </TabsContent>

@@ -6,12 +6,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Calendar, Clock, ArrowLeft, Star, MapPin, Mail, Phone } from "lucide-react";
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import ServiceSelection from "@/components/ServiceSelection";
+import { Service } from "@/types/Event";
 
 const Booking = () => {
   const { providerId } = useParams();
   const navigate = useNavigate();
   const [selectedDate, setSelectedDate] = useState("");
   const [selectedTime, setSelectedTime] = useState("");
+  const [selectedService, setSelectedService] = useState<Service | null>(null);
 
   // Mock data pour le prestataire
   const provider = {
@@ -25,9 +28,30 @@ const Booking = () => {
     email: "sarah.martin@cabinet-medical.fr",
     phone: "+33 1 42 25 18 90",
     services: [
-      { name: "Consultation générale", duration: "30 min", price: 60 },
-      { name: "Consultation de suivi", duration: "20 min", price: 45 },
-      { name: "Consultation préventive", duration: "45 min", price: 80 }
+      { 
+        id: "1", 
+        name: "Consultation générale", 
+        duration: "30 min", 
+        price: 60, 
+        description: "Consultation médicale complète",
+        category: "Consultation"
+      },
+      { 
+        id: "2", 
+        name: "Consultation de suivi", 
+        duration: "20 min", 
+        price: 45, 
+        description: "Suivi médical régulier",
+        category: "Consultation"
+      },
+      { 
+        id: "3", 
+        name: "Consultation préventive", 
+        duration: "45 min", 
+        price: 80, 
+        description: "Bilan de santé préventif",
+        category: "Consultation"
+      }
     ]
   };
 
@@ -38,13 +62,13 @@ const Booking = () => {
   ];
 
   const handleBooking = () => {
-    if (!selectedDate || !selectedTime) {
-      alert("Veuillez sélectionner une date et une heure");
+    if (!selectedDate || !selectedTime || !selectedService) {
+      alert("Veuillez sélectionner un service, une date et une heure");
       return;
     }
     
     // Ici on simulerait la réservation
-    alert(`Rendez-vous réservé pour le ${selectedDate} à ${selectedTime}`);
+    alert(`Rendez-vous réservé pour ${selectedService.name} le ${selectedDate} à ${selectedTime}`);
     navigate("/dashboard-user");
   };
 
@@ -126,28 +150,45 @@ const Booking = () => {
           {/* Services & Booking */}
           <div className="lg:col-span-2">
             <Tabs defaultValue="services" className="space-y-6">
-              <TabsList className="grid w-full grid-cols-2">
+              <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="services">Services</TabsTrigger>
+                <TabsTrigger value="selection">Sélection</TabsTrigger>
                 <TabsTrigger value="booking">Réservation</TabsTrigger>
               </TabsList>
 
               <TabsContent value="services">
                 <Card className="p-6 bg-background border border-border">
                   <h3 className="text-xl font-semibold text-foreground mb-6">Services proposés</h3>
-                  <div className="space-y-4">
-                    {provider.services.map((service, index) => (
-                      <div key={index} className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
-                        <div>
-                          <h4 className="font-medium text-foreground">{service.name}</h4>
-                          <p className="text-sm text-muted-foreground flex items-center space-x-2">
-                            <Clock className="w-3 h-3" />
-                            <span>{service.duration}</span>
-                          </p>
+                  <ServiceSelection 
+                    services={provider.services}
+                    selectedService={selectedService}
+                    onServiceSelect={setSelectedService}
+                  />
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="selection">
+                <Card className="p-6 bg-background border border-border">
+                  <h3 className="text-xl font-semibold text-foreground mb-6">Service sélectionné</h3>
+                  {selectedService ? (
+                    <div className="p-4 bg-primary/5 border border-primary/20 rounded-lg">
+                      <h4 className="font-medium text-foreground mb-2">{selectedService.name}</h4>
+                      <p className="text-sm text-muted-foreground mb-3">{selectedService.description}</p>
+                      <div className="flex items-center space-x-4 text-sm">
+                        <div className="flex items-center space-x-1">
+                          <Clock className="w-4 h-4 text-primary" />
+                          <span>{selectedService.duration}</span>
                         </div>
-                        <span className="text-lg font-bold text-primary">{service.price}€</span>
+                        <div className="flex items-center space-x-1">
+                          <span className="text-lg font-bold text-primary">{selectedService.price}€</span>
+                        </div>
                       </div>
-                    ))}
-                  </div>
+                    </div>
+                  ) : (
+                    <p className="text-muted-foreground text-center py-8">
+                      Veuillez d'abord sélectionner un service dans l'onglet "Services"
+                    </p>
+                  )}
                 </Card>
               </TabsContent>
 
@@ -236,20 +277,24 @@ const Booking = () => {
                 
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Service</span>
-                  <span className="font-medium">Consultation générale</span>
+                  <span className="font-medium">
+                    {selectedService?.name || "Aucun service sélectionné"}
+                  </span>
                 </div>
                 
                 <div className="border-t pt-4">
                   <div className="flex justify-between text-lg font-bold">
                     <span>Total</span>
-                    <span className="text-primary">60€</span>
+                    <span className="text-primary">
+                      {selectedService?.price || 0}€
+                    </span>
                   </div>
                 </div>
               </div>
 
               <Button 
                 onClick={handleBooking}
-                disabled={!selectedDate || !selectedTime}
+                disabled={!selectedDate || !selectedTime || !selectedService}
                 className="w-full bg-gradient-primary text-white hover:opacity-90 h-11"
               >
                 Confirmer la réservation
