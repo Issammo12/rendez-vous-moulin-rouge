@@ -5,6 +5,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Calendar, Clock, Users, Settings, Bell, Plus, ArrowLeft } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import WeeklyCalendar from "@/components/WeeklyCalendar";
+import AvailabilityDisplay from "@/components/AvailabilityDisplay";
 
 interface User {
   email: string;
@@ -17,8 +19,15 @@ interface User {
   company?: string;
 }
 
+interface TimeSlot {
+  day: string;
+  hour: string;
+  date: string;
+}
+
 const DashboardClient = () => {
   const [user, setUser] = useState<User | null>(null);
+  const [availableSlots, setAvailableSlots] = useState<TimeSlot[]>([]);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -35,11 +44,41 @@ const DashboardClient = () => {
     }
     
     setUser(parsedUser);
+
+    // Charger les créneaux sauvegardés
+    const savedSlots = localStorage.getItem(`availability_${parsedUser.id}`);
+    if (savedSlots) {
+      setAvailableSlots(JSON.parse(savedSlots));
+    }
   }, [navigate]);
 
   const handleLogout = () => {
     localStorage.removeItem('user');
     navigate('/');
+  };
+
+  const handleSlotsConfirm = (newSlots: TimeSlot[]) => {
+    const updatedSlots = [...availableSlots, ...newSlots];
+    setAvailableSlots(updatedSlots);
+    
+    // Sauvegarder dans localStorage
+    if (user) {
+      localStorage.setItem(`availability_${user.id}`, JSON.stringify(updatedSlots));
+    }
+  };
+
+  const handleRemoveSlot = (slotToRemove: TimeSlot) => {
+    const updatedSlots = availableSlots.filter(slot => 
+      !(slot.day === slotToRemove.day && 
+        slot.hour === slotToRemove.hour && 
+        slot.date === slotToRemove.date)
+    );
+    setAvailableSlots(updatedSlots);
+    
+    // Sauvegarder dans localStorage
+    if (user) {
+      localStorage.setItem(`availability_${user.id}`, JSON.stringify(updatedSlots));
+    }
   };
 
   if (!user) return null;
@@ -206,19 +245,14 @@ const DashboardClient = () => {
             </div>
           </TabsContent>
 
-          <TabsContent value="calendar">
-            <Card className="p-8 text-center bg-gradient-card border-0 shadow-soft">
-              <Calendar className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-foreground mb-2">
-                Calendrier interactif
-              </h3>
-              <p className="text-muted-foreground mb-6">
-                Gérez vos créneaux de disponibilité et visualisez vos rendez-vous
-              </p>
-              <Button className="bg-gradient-primary text-white hover:opacity-90">
-                Configurer mon calendrier
-              </Button>
-            </Card>
+          <TabsContent value="calendar" className="space-y-6">
+            <div className="space-y-6">
+              <WeeklyCalendar onSlotsConfirm={handleSlotsConfirm} />
+              <AvailabilityDisplay 
+                availableSlots={availableSlots} 
+                onRemoveSlot={handleRemoveSlot}
+              />
+            </div>
           </TabsContent>
 
           <TabsContent value="services">
