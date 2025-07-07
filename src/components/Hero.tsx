@@ -24,6 +24,7 @@ const Hero = () => {
             <Button 
               size="lg" 
               className="bg-white text-primary hover:bg-white/90 text-lg px-8 py-4 h-auto shadow-large"
+              onClick={() => window.location.href = '/register'}
             >
               Créer mon compte prestataire
             </Button>
@@ -31,6 +32,7 @@ const Hero = () => {
               variant="outline" 
               size="lg"
               className="border-white text-white hover:bg-white/10 text-lg px-8 py-4 h-auto"
+              onClick={() => window.location.href = '/login'}
             >
               Découvrir les prestataires
             </Button>

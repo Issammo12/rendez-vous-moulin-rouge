@@ -103,6 +103,7 @@ const UserTypeSelection = () => {
                     ? 'bg-gradient-primary text-white hover:opacity-90' 
                     : 'bg-secondary hover:bg-secondary-hover'
                 }`}
+                onClick={() => window.location.href = '/register'}
               >
                 {account.buttonText}
               </Button>

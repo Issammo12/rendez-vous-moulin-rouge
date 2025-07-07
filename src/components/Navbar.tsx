@@ -26,11 +26,20 @@ const Navbar = () => {
           </div>
 
           <div className="flex items-center space-x-4">
-            <Button variant="ghost" size="sm" className="hidden sm:flex">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="hidden sm:flex"
+              onClick={() => window.location.href = '/login'}
+            >
               <User className="w-4 h-4 mr-2" />
               Connexion
             </Button>
-            <Button size="sm" className="bg-gradient-primary text-white hover:opacity-90">
+            <Button 
+              size="sm" 
+              className="bg-gradient-primary text-white hover:opacity-90"
+              onClick={() => window.location.href = '/register'}
+            >
               S'inscrire
             </Button>
           </div>
