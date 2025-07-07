@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Calendar, Clock, Search, User, ArrowLeft, Bell, Star } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Event } from "@/types/Event";
 
 interface User {
   email: string;
@@ -19,6 +20,7 @@ interface User {
 const DashboardUser = () => {
   const [user, setUser] = useState<User | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [eventBookings, setEventBookings] = useState<any[]>([]);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -35,6 +37,12 @@ const DashboardUser = () => {
     }
     
     setUser(parsedUser);
+
+    // Charger les réservations d'événements
+    const savedEventBookings = localStorage.getItem(`event_bookings_${parsedUser.id}`);
+    if (savedEventBookings) {
+      setEventBookings(JSON.parse(savedEventBookings));
+    }
   }, [navigate]);
 
   const handleLogout = () => {
@@ -79,7 +87,15 @@ const DashboardUser = () => {
 
   const mockAppointments = [
     { id: 1, provider: "Dr. Sarah Martin", date: "2024-01-20", time: "14:00", status: "confirmed", service: "Consultation générale" },
-    { id: 2, provider: "Marie Dubois", date: "2024-01-25", time: "10:30", status: "pending", service: "Séance coaching" }
+    { id: 2, provider: "Marie Dubois", date: "2024-01-25", time: "10:30", status: "pending", service: "Séance coaching" },
+    ...eventBookings.map((booking, index) => ({
+      id: `event_${index}`,
+      provider: "Dr. Sarah Martin", // En réalité, on récupérerait le nom du prestataire
+      date: booking.eventDate,
+      time: booking.eventTime,
+      status: "confirmed",
+      service: `${booking.eventTitle} (${booking.numberOfPlaces} place${booking.numberOfPlaces > 1 ? 's' : ''})`
+    }))
   ];
 
   const filteredProviders = mockProviders.filter(provider =>
@@ -140,9 +156,10 @@ const DashboardUser = () => {
 
         {/* Main Content */}
         <Tabs defaultValue="providers" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="providers">Prestataires</TabsTrigger>
             <TabsTrigger value="appointments">Mes RDV</TabsTrigger>
+            <TabsTrigger value="events">Mes Événements</TabsTrigger>
             <TabsTrigger value="history">Historique</TabsTrigger>
           </TabsList>
 
@@ -247,6 +264,63 @@ const DashboardUser = () => {
                 </Card>
               ))}
             </div>
+          </TabsContent>
+
+          <TabsContent value="events" className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-bold text-foreground">Mes événements</h2>
+            </div>
+
+            {eventBookings.length === 0 ? (
+              <Card className="p-8 text-center bg-gradient-card border-0 shadow-soft">
+                <Calendar className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-foreground mb-2">
+                  Aucun événement réservé
+                </h3>
+                <p className="text-muted-foreground mb-6">
+                  Découvrez les événements proposés par nos prestataires
+                </p>
+                <Button className="bg-gradient-primary text-white hover:opacity-90">
+                  Explorer les événements
+                </Button>
+              </Card>
+            ) : (
+              <div className="space-y-4">
+                {eventBookings.map((booking, index) => (
+                  <Card key={index} className="p-6 bg-background border border-border hover:shadow-medium transition-all">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-4">
+                        <div className="w-12 h-12 bg-accent/10 rounded-lg flex items-center justify-center">
+                          <Calendar className="w-6 h-6 text-accent" />
+                        </div>
+                        <div>
+                          <h3 className="font-semibold text-foreground">{booking.eventTitle}</h3>
+                          <p className="text-muted-foreground text-sm">
+                            {booking.numberOfPlaces} place{booking.numberOfPlaces > 1 ? 's' : ''} réservée{booking.numberOfPlaces > 1 ? 's' : ''}
+                          </p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center space-x-4">
+                        <div className="text-right">
+                          <p className="font-medium text-foreground">{booking.eventDate}</p>
+                          <p className="text-sm text-muted-foreground">{booking.eventTime}</p>
+                        </div>
+                        <Badge className="bg-success text-success-foreground">
+                          Confirmé
+                        </Badge>
+                        {booking.totalPrice > 0 && (
+                          <div className="text-right">
+                            <p className="text-sm text-muted-foreground">Total payé</p>
+                            <p className="font-bold text-primary">{booking.totalPrice}€</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            )}
           </TabsContent>
 
           <TabsContent value="history">
