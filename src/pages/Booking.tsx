@@ -265,10 +265,10 @@ const Booking = () => {
                 <TabsTrigger value="services">
                   {bookingType === "service" ? "Services" : "Événements"}
                 </TabsTrigger>
-                <TabsTrigger value="payment">payment</TabsTrigger>
                 <TabsTrigger value="booking" disabled={bookingType === "event"}>
                   Réservation
                 </TabsTrigger>
+                <TabsTrigger value="payment">Paiement</TabsTrigger>
               </TabsList>
 
               <TabsContent value="services">
@@ -294,7 +294,7 @@ const Booking = () => {
 
               <TabsContent value="payment">
                 <Card className="p-6 bg-background border border-border">
-                  {selectedService ? (
+                  {selectedService && selectedDate && selectedTime ? (
                     <PaymentForm
                       selectedService={selectedService}
                       paymentMethod={paymentMethod}
@@ -303,7 +303,9 @@ const Booking = () => {
                     />
                   ) : (
                     <div className="text-center py-8">
-                      <p className="text-muted-foreground">Veuillez d'abord sélectionner un service</p>
+                      <p className="text-muted-foreground">
+                        Veuillez d'abord sélectionner un service et choisir un créneau
+                      </p>
                     </div>
                   )}
                 </Card>
