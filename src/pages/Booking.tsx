@@ -274,35 +274,10 @@ const Booking = () => {
                 </Card>
               </TabsContent>
 
-              <TabsContent value="selection">
+              <TabsContent value="payment">
                 <Card className="p-6 bg-background border border-border">
-                  <h3 className="text-xl font-semibold text-foreground mb-6">
-                    {bookingType === "service" ? "Service sélectionné" : "Événement sélectionné"}
-                  </h3>
+                  <h3 className="text-xl font-semibold text-foreground mb-6">Choisir la methode de payment</h3>
                   
-                  {bookingType === "service" && selectedService ? (
-                    <div className="p-4 bg-primary/5 border border-primary/20 rounded-lg">
-                      <h4 className="font-medium text-foreground mb-2">{selectedService.name}</h4>
-                      <p className="text-sm text-muted-foreground mb-3">{selectedService.description}</p>
-                      <div className="flex items-center space-x-4 text-sm">
-                        <div className="flex items-center space-x-1">
-                          <Clock className="w-4 h-4 text-primary" />
-                          <span>{selectedService.duration}</span>
-                        </div>
-                        <div className="flex items-center space-x-1">
-                          <span className="text-lg font-bold text-primary">{selectedService.price}€</span>
-                        </div>
-                      </div>
-                    </div>
-                  ) : bookingType === "service" ? (
-                    <p className="text-muted-foreground text-center py-8">
-                      Veuillez d'abord sélectionner un service dans l'onglet "Services"
-                    </p>
-                  ) : (
-                    <p className="text-muted-foreground text-center py-8">
-                      Pour les événements, la réservation se fait directement depuis la liste des événements
-                    </p>
-                  )}
                 </Card>
               </TabsContent>
 
