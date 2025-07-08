@@ -251,6 +251,7 @@ const Booking = () => {
                 <TabsTrigger value="booking" disabled={bookingType === "event"}>
                   Réservation
                 </TabsTrigger>
+                <TabsTrigger value="selection">Mode de paiement</TabsTrigger>
               </TabsList>
 
               <TabsContent value="services">
