@@ -9,6 +9,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import ServiceSelection from "@/components/ServiceSelection";
 import EventSelection from "@/components/EventSelection";
 import EventBookingModal from "@/components/EventBookingModal";
+import PaymentForm from "@/components/PaymentForm";
 import { Service } from "@/types/Event";
 import { Event } from "@/types/Event";
 
@@ -21,6 +22,8 @@ const Booking = () => {
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [isEventModalOpen, setIsEventModalOpen] = useState(false);
   const [bookingType, setBookingType] = useState<"service" | "event">("service");
+  const [paymentMethod, setPaymentMethod] = useState<"online" | "reception" | null>(null);
+  const [paymentCompleted, setPaymentCompleted] = useState(false);
 
   // Mock data pour le prestataire
   const provider = {
@@ -123,16 +126,31 @@ const Booking = () => {
     navigate("/dashboard-user");
   };
 
+  const handlePaymentComplete = (paymentData: any) => {
+    setPaymentCompleted(true);
+    
+    const bookingDetails = {
+      service: selectedService,
+      date: selectedDate,
+      time: selectedTime,
+      payment: paymentData
+    };
+    
+    if (paymentData.method === "online") {
+      alert(`Paiement de ${paymentData.amount}€ effectué avec succès!\nRendez-vous confirmé pour ${selectedService?.name} le ${selectedDate} à ${selectedTime}`);
+    } else {
+      alert(`Rendez-vous confirmé pour ${selectedService?.name} le ${selectedDate} à ${selectedTime}\nPaiement à effectuer à la réception: ${paymentData.amount}€`);
+    }
+    
+    navigate("/dashboard-user");
+  };
+
   const handleBooking = () => {
-    if (bookingType === "service" && (!selectedDate || !selectedTime || !selectedService)) {
-      alert("Veuillez sélectionner un service, une date et une heure");
+    if (bookingType === "service" && (!selectedDate || !selectedTime || !selectedService || !paymentCompleted)) {
+      alert("Veuillez compléter toutes les étapes de réservation");
       return;
     }
     
-    // Ici on simulerait la réservation
-    if (bookingType === "service") {
-      alert(`Rendez-vous réservé pour ${selectedService?.name} le ${selectedDate} à ${selectedTime}`);
-    }
     navigate("/dashboard-user");
   };
 
@@ -276,8 +294,18 @@ const Booking = () => {
 
               <TabsContent value="payment">
                 <Card className="p-6 bg-background border border-border">
-                  <h3 className="text-xl font-semibold text-foreground mb-6">Choisir la methode de payment</h3>
-                  
+                  {selectedService ? (
+                    <PaymentForm
+                      selectedService={selectedService}
+                      paymentMethod={paymentMethod}
+                      onPaymentMethodChange={setPaymentMethod}
+                      onPaymentComplete={handlePaymentComplete}
+                    />
+                  ) : (
+                    <div className="text-center py-8">
+                      <p className="text-muted-foreground">Veuillez d'abord sélectionner un service</p>
+                    </div>
+                  )}
                 </Card>
               </TabsContent>
 
