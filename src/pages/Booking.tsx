@@ -247,11 +247,10 @@ const Booking = () => {
                 <TabsTrigger value="services">
                   {bookingType === "service" ? "Services" : "Événements"}
                 </TabsTrigger>
-                <TabsTrigger value="selection">Sélection</TabsTrigger>
+                <TabsTrigger value="payment">payment</TabsTrigger>
                 <TabsTrigger value="booking" disabled={bookingType === "event"}>
                   Réservation
                 </TabsTrigger>
-                <TabsTrigger value="selection">Mode de paiement</TabsTrigger>
               </TabsList>
 
               <TabsContent value="services">
